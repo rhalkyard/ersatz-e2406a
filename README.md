@@ -5,6 +5,9 @@ the [HP
 E2406A](http://bitsavers.org/test_equipment/hp/logic_analyzer_preprocessors/E2406-97004_68030_Analysis_Probe_200106.pdf)
 68030 analysis probe.
 
+![](images/setup.jpg)
+![](images/closeup.jpg)
+
 ## Bill of materials
 
 | Reference | Quantity | Description                                      | Digikey P/N  |
@@ -24,33 +27,55 @@ Works (with limitations described below) on the Macintosh IIfx.
 Should in theory work on the Macintosh IIsi, but has not been tested, and will
 probably not fit without removing the logic board from the case.
 
-### Macintosh IIfx limitations
-
-The unique design of the Macintosh IIfx imposes significant limitations on the
-operation of this adapter. While on other machines, the PDS slot is connected
-directly to the CPU and can fully 'observe' all bus transactions, the PDS slot
-on the IIfx (along with NuBus and onboard IO devices) is on a buffered 'slow
-bus' separate from main memory. As a result, when used on the IIfx, this adapter
-can only capture accesses to PDS, NuBus and onboard IO devices, and cannot
-capture accesses to RAM or ROM.
-
-This adapter does not implement the E2406A's external logic that allows the
-analyzer to decode burst-mode accesses. The only 68030 Macintosh that uses burst
-mode is the IIfx, and due to the limitations described above, burst-mode
-accesses cannot be observed from the PDS slot anyway.
-
 ### Logic Analyzer requirements
 
 This adapter should be compatible with any HP logic analyzer having at least 80
 channels (i.e. 5 or more pods). I have personally been using it with a 1650B and
-1652B, but a 1660, or 1670-series analyzer should work just as well (or better)
+1652B, but a 1660- or 1670-series analyzer should work just as well (or better)
 so long as it has enough channels.
 
 While it is possible to connect this board to a logic analyzer using flying-lead
 pods, it is designed to be used with HP 01650-63203 "termination adapters" that
 connect using 20-pin 0.1"-pitch connectors. I have also designed [a DIY
 substitute](https://github.com/rhalkyard/hp-logic-analyzer-termination-adapter)
-for these adapters, since they original adapters are not always easy to find.
+for these adapters, since they were an optional extra and most analyzers do not
+come with them.
+
+## Differences to the original E2406A
+
+The original E2406A analysis probe is a board that interposes between the CPU
+and CPU socket. Given the height of components surrounding the CPU socket on
+Macintosh logic boards, it is unlikely that it would fit as intended on a
+Macintosh. Instead, this adapter plugs into the 68030 PDS slot, which exposes
+_almost_ the entire 68030 processor bus. The `/CIIN` and `/REFILL` signals are
+not present on the PDS connector, but the absence of these signals does not have
+significant bearing on analysis - on Macintosh systems, `/CIIN` is tied high,
+and the `/REFILL` signal from the processor just provides additional low-level
+information on the pipeline state.
+
+The E2406A is an active probe with buffers on its logic analyzer outputs in
+order to lessen its impact on signal integrity. In the interests of simplicity
+(and cost), this adapter omits those buffers. On stock or minimally-expanded
+machines, this appears to be no issue, but machines with large numbers of
+expansion cards may experience instability.
+
+The E2406A also has active logic to assist the analyzer in capturing accesses
+that use the 68030's burst mode. This adapter omits this logic, and is unable to
+correctly capture burst-mode accesses (only the final longword will be
+captured). The only Macintosh to use burst mode is the IIfx, and as described
+below, the architecture of the IIfx means that memory accesses cannot be
+observed from the PDS slot anyway, so the lack of burst nmode support is moot in
+this application.
+
+## Limitations in use with the Macintosh IIfx
+
+The architecture of the Macintosh IIfx imposes significant limitations on the
+operation of this adapter. While on other machines, the PDS slot is connected
+directly to the CPU and can fully 'observe' all bus transactions, the PDS slot
+on the IIfx is on a buffered 'slow bus' separate from main memory and shared
+only with NuBus and onboard I/O devices. As a result, when used on the IIfx,
+this adapter can only capture accesses to PDS, NuBus and onboard I/O devices, and
+cannot capture accesses to RAM or ROM.
 
 ## Configuration
 
@@ -105,8 +130,7 @@ labels for each status line, as shown in the pinout table.
 ## Inverse Assembler
 
 The inverse assembler software for the E2406A will work with this adapter. A
-disk image containing the inverse assembler (file name `I68030`) can be found on
-BitSavers at
+disk image containing the inverse assembler can be found on BitSavers at
 http://bitsavers.org/test_equipment/hp/logic_analyzer_preprocessors/inv_asm/68030.IMD.
 
 Note that while the E2406A manual claims that it is only compatible with the
