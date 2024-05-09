@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "PDS")(type "KiCad")(uri "${KIPRJMOD}/PDS.kicad_sym")(options "")(descr ""))
+)
